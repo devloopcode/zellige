@@ -4,10 +4,15 @@ describe('CIN Validator', () => {
   describe('validateCIN', () => {
     test('should validate correct CIN numbers', () => {
       const validCINs = [
-        'A123456', // Single letter, 6 digits
-        'BE12345', // Two letters, 5 digits
-        'BH12345', // Two letters, 5 digits
-        'K123456', // Single letter, 6 digits
+        'A123456', // Rabat
+        'BE12345', // Casablanca
+        'BH12345', // Casablanca
+        'K123456', // Tanger
+        'EE12345', // Marrakech
+        'JK12345', // Agadir
+        'BX12345', // MRE
+        'ZT12345', // Taounate
+        'UA12345', // Goulmima
       ];
 
       validCINs.forEach(cin => {
@@ -25,7 +30,7 @@ describe('CIN Validator', () => {
         'A12345', // single letter with 5 digits (invalid)
         'BE123456', // two letters with 6 digits (invalid)
         'A1234567', // too many digits
-        'Z123456', // invalid region
+        'YY12345', // invalid two-letter combination
         'A12345A', // digits must be at end
         'BE0123456', // sequence starting with 0
         'XX12345', // invalid two-letter combination
@@ -51,10 +56,23 @@ describe('CIN Validator', () => {
 
   describe('extractCINMetadata', () => {
     test('should extract correct region information', () => {
-      const metadata = extractCINMetadata('BE12345');
-      expect(metadata).toEqual({
-        region: 'Casablanca-Settat',
-        sequence: '12345',
+      const testCases = [
+        {
+          cin: 'BE12345',
+          expected: { region: 'Casablanca', sequence: '12345' },
+        },
+        { cin: 'A123456', expected: { region: 'Rabat', sequence: '123456' } },
+        {
+          cin: 'EE12345',
+          expected: { region: 'Marrakech', sequence: '12345' },
+        },
+        { cin: 'BX12345', expected: { region: 'MRE', sequence: '12345' } },
+        { cin: 'UA12345', expected: { region: 'Goulmima', sequence: '12345' } },
+      ];
+
+      testCases.forEach(({ cin, expected }) => {
+        const metadata = extractCINMetadata(cin);
+        expect(metadata).toEqual(expected);
       });
     });
 
