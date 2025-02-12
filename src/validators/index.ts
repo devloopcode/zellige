@@ -1,23 +1,58 @@
-// Import all validators
-import { validateCIN, extractCINMetadata, formatCIN } from './cin';
+/**
+ * Validator module for CIN (Carte d'Identité Nationale) operations
+ * @module validators
+ */
 
-// Export individual validators
+/**
+ * Import CIN validation utilities
+ */
+import {
+  validateCIN,
+  extractCINMetadata,
+  formatCIN,
+  generateTestCIN,
+  getCINRegion,
+  sanitizeCIN,
+} from './cin';
+
+/**
+ * Namespace containing all CIN-related validation functions
+ */
 export const cin = {
   validate: validateCIN,
   extractMetadata: extractCINMetadata,
   format: formatCIN,
+  generateTest: generateTestCIN,
+  getRegion: getCINRegion,
+  sanitize: sanitizeCIN,
 };
 
-// Export all validators as a group
+/**
+ * Collection of all validator namespaces
+ */
 export const validators = {
   cin,
 };
 
-// Default export for easier importing
+/**
+ * Default export providing access to all validator functions
+ * @default
+ */
 export default validators;
 
-// export individual functions for direct use
-export { validateCIN, extractCINMetadata, formatCIN };
+/**
+ * Direct exports of CIN validation functions for granular imports
+ */
+export {
+  validateCIN,
+  extractCINMetadata,
+  formatCIN,
+  generateTestCIN,
+  getCINRegion,
+  sanitizeCIN,
+};
 
-// Export types
+/**
+ * Type exports for CIN validation
+ */
 export type { CINValidationResult } from './cin';

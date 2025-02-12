@@ -1,22 +1,36 @@
+export enum CINErrorCode {
+  INVALID_INPUT = 'INVALID_INPUT',
+  INVALID_FORMAT = 'INVALID_FORMAT',
+  INVALID_REGION = 'INVALID_REGION',
+  INVALID_SEQUENCE = 'INVALID_SEQUENCE',
+}
+
+export interface CINError {
+  code: CINErrorCode;
+  message: string;
+}
+
 export interface CINValidationResult {
   isValid: boolean;
-  errors: string[];
+  errors: CINError[];
   metadata?: {
     region?: string;
     year?: string;
     sequence?: string;
+    issuingOffice?: string;
   };
+}
+
+export interface CINMetadata {
+  region: string;
+  sequence: string;
 }
 
 /**
  * Regular expression for Moroccan CIN validation
- * Format:
- * - Single letter: A-Z followed by exactly 6 digits
- * - Two letters: Valid two-letter combinations followed by exactly 5 digits
+ * Format: 1-3 letters followed by 6 digits
  */
-const SINGLE_LETTER_CIN_REGEX = /^[ABCDEFGHIJKLMNOPQRSTUVWXZ]\d{6}$/;
-const TWO_LETTER_CIN_REGEX =
-  /^(AG|AC|AJ|AB|AE|AY|AS|AD|BA|BB|BE|BH|BJ|BK|BL|BM|BF|BV|BW|BX|CC|CD|CB|CN|DN|DA|DB|DC|DJ|DO|DF|EE|EA|ES|FA|FB|FC|FD|FE|FG|FH|FJ|FK|FL|GA|GB|GK|GM|GN|GJ|HH|HA|IA|IB|IC|ID|IE|JK|JA|JB|JC|JD|JE|JF|JH|JM|JT|JY|JZ|KB|KA|LA|LB|LC|LE|LF|LG|MA|MC|MD|OD|PA|PB|PK|PP|PY|QA|QB|RB|RC|RX|SA|SB|SH|SJ|SK|SL|TA|TK|UA|UB|UC|UD|VA|VM|WA|WB|XA|ZG|ZH|ZT)\d{5}$/;
+const CIN_REGEX = /^[A-Z]{1,3}\d{6}$/;
 
 /**
  * Mapping of CIN prefixes to regions
@@ -24,6 +38,7 @@ const TWO_LETTER_CIN_REGEX =
 const REGION_PREFIXES: { [key: string]: string } = {
   // Rabat-Salé-Kénitra Region
   A: 'Rabat',
+  AA: 'Rabat',
   AG: 'Rabat',
   AC: 'Rabat',
   AJ: 'Rabat',
@@ -170,119 +185,249 @@ const REGION_PREFIXES: { [key: string]: string } = {
   DF: 'MRE',
   PK: 'MRE',
   PP: 'MRE',
+  PS: 'MRE',
+  PH: 'MRE',
   PY: 'MRE',
   ES: 'MRE',
+
+  // Additional/Updated entries
+  FC: 'El Aioun Sidi Mellouk',
+  JA: 'Guelmim',
+  JD: 'Sidi Ifni',
+  JF: 'Tan-Tan',
+  JY: 'Tata',
+  JZ: 'Assa-Zag',
 };
 
+// Add literal types for regions
+export type CINRegionPrefix = keyof typeof REGION_PREFIXES;
+
 /**
- * Validates a Moroccan CIN (Carte d'Identité Nationale) number
- * @param cin - The CIN number to validate
- * @returns CINValidationResult object containing validation status and details
- */
-/**
- * Validates a CIN (Citizen Identification Number) based on specific patterns and rules.
+ * Sanitizes a CIN (Carte d'Identité Nationale) input string by removing whitespace and special characters
  *
- * @param cin - The CIN string to validate.
- * @returns An object containing the validation result, including whether the CIN is valid,
- *          any errors encountered during validation, and metadata if the CIN is valid.
- *
- * The validation process includes:
- * - Checking if the CIN is empty or not a string.
- * - Normalizing the input by trimming and converting to uppercase.
- * - Checking if the CIN matches either of the allowed patterns:
- *   - One letter followed by 6 digits (e.g., A123456)
- *   - Valid two-letter combination (BE, BH, BJ, BK, CD, EE) followed by 5 digits
- * - Extracting and validating the region prefix.
- * - Extracting and validating the sequence number.
- *
- * If the CIN is valid, the result will include metadata with the region and sequence number.
+ * @param input - Raw CIN input that needs to be sanitized
+ * @returns Sanitized uppercase string or null if input is invalid
  *
  * @example
  * ```typescript
- * const result = validateCIN('A123456');
- * if (result.isValid) {
- *   console.log('Valid CIN:', result.metadata);
- * } else {
- *   console.error('Invalid CIN:', result.errors);
- * }
+ * sanitizeCIN('A 123456'); // Returns 'A123456'
+ * sanitizeCIN('BE-789.012'); // Returns 'BE789012'
+ * sanitizeCIN(null); // Returns null
  * ```
  */
-export function validateCIN(cin: string): CINValidationResult {
+export function sanitizeCIN(input: unknown): string | null {
+  if (typeof input !== 'string') {
+    return null;
+  }
+
+  return input.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
+
+/**
+ * Performs comprehensive validation of a Moroccan CIN (Carte d'Identité Nationale)
+ *
+ * @param cin - The CIN string to validate
+ * @returns Validation result containing status, errors, and metadata if valid
+ *
+ * @example
+ * ```typescript
+ * validateCIN('A123456');
+ * // Returns {
+ * //   isValid: true,
+ * //   errors: [],
+ * //   metadata: {
+ * //     region: 'Rabat',
+ * //     sequence: '123456',
+ * //     issuingOffice: 'A'
+ * //   }
+ * // }
+ *
+ * validateCIN('XX999999');
+ * // Returns {
+ * //   isValid: false,
+ * //   errors: [{
+ * //     code: CINErrorCode.INVALID_REGION,
+ * //     message: 'Invalid region prefix: XX'
+ * //   }]
+ * // }
+ * ```
+ */
+export function validateCIN(cin: unknown): CINValidationResult {
   const result: CINValidationResult = {
     isValid: false,
     errors: [],
   };
 
-  // Check if empty
+  // Input validation
   if (!cin || typeof cin !== 'string') {
-    result.errors.push('CIN cannot be empty and must be a string');
+    result.errors.push({
+      code: CINErrorCode.INVALID_INPUT,
+      message: 'CIN must be a non-empty string',
+    });
     return result;
   }
 
-  // Normalize input
-  const normalizedCIN = cin.trim().toUpperCase();
-
-  // Check if it matches either pattern
-  const isSingleLetterValid = SINGLE_LETTER_CIN_REGEX.test(normalizedCIN);
-  const isTwoLetterValid = TWO_LETTER_CIN_REGEX.test(normalizedCIN);
-
-  if (!isSingleLetterValid && !isTwoLetterValid) {
-    result.errors.push(
-      'Invalid CIN format. Must be either:\n' +
-        '- One letter followed by 6 digits (e.g., A123456)\n' +
-        '- Valid two-letter combination (BE,BH,BJ,BK,CD,EE) followed by 5 digits'
-    );
+  // Sanitize input
+  const sanitized = sanitizeCIN(cin);
+  if (!sanitized) {
+    result.errors.push({
+      code: CINErrorCode.INVALID_INPUT,
+      message: 'CIN contains invalid characters',
+    });
     return result;
   }
 
-  // Extract prefix (letters)
-  const prefix = normalizedCIN.match(/^[A-Z]+/)![0];
+  // Check format
+  if (!CIN_REGEX.test(sanitized)) {
+    result.errors.push({
+      code: CINErrorCode.INVALID_FORMAT,
+      message: 'Invalid CIN format. Must be 1-3 letters followed by 6 digits',
+    });
+    return result;
+  }
 
-  // Validate region prefix
+  // Extract and validate parts
+  const prefix = sanitized.match(/^[A-Z]+/)![0] as CINRegionPrefix;
+  const sequence = sanitized.match(/\d+$/)![0];
+
+  // Validate region
   if (!REGION_PREFIXES[prefix]) {
-    result.errors.push(`Invalid region prefix: ${prefix}`);
+    result.errors.push({
+      code: CINErrorCode.INVALID_REGION,
+      message: `Invalid region prefix: ${prefix}`,
+    });
     return result;
   }
 
-  // Extract sequence (numbers)
-  const sequence = normalizedCIN.match(/\d+$/)![0];
-
-  // Additional validation for sequence
-  if (!/^[1-9]\d*$/.test(sequence)) {
-    result.errors.push('Sequence number cannot start with 0');
+  // Validate sequence
+  if (!/^[1-9]\d{5}$/.test(sequence)) {
+    result.errors.push({
+      code: CINErrorCode.INVALID_SEQUENCE,
+      message: 'Sequence must be 6 digits and cannot start with 0',
+    });
     return result;
   }
 
-  // If we got here, the CIN is valid
+  // Valid CIN
   result.isValid = true;
   result.metadata = {
     region: REGION_PREFIXES[prefix],
     sequence: sequence,
+    issuingOffice: prefix as string,
   };
 
   return result;
 }
 
 /**
- * Extracts metadata from a valid CIN number
- * @param cin - The CIN number to analyze
- * @returns Metadata object or null if CIN is invalid
+ * Quick check to determine if a string is a valid Moroccan CIN
+ *
+ * @param cin - The CIN string to check
+ * @returns True if the CIN is valid, false otherwise
+ *
+ * @example
+ * ```typescript
+ * isValidCIN('A123456'); // Returns true
+ * isValidCIN('XX999999'); // Returns false
+ * isValidCIN('12345'); // Returns false
+ * ```
  */
-export function extractCINMetadata(cin: string) {
-  const validation = validateCIN(cin);
-  return validation.isValid ? validation.metadata : null;
+export function isValidCIN(cin: unknown): boolean {
+  return validateCIN(cin).isValid;
 }
 
 /**
- * Formats a CIN number to standard format
- * @param cin - The CIN number to format
- * @returns Formatted CIN string or null if invalid
+ * Retrieves the region name associated with a CIN prefix
+ *
+ * @param prefix - The CIN prefix (1-3 letters) to look up
+ * @returns The full region name or null if the prefix is invalid
+ *
+ * @example
+ * ```typescript
+ * getCINRegion('A'); // Returns 'Rabat'
+ * getCINRegion('BK'); // Returns 'Casablanca'
+ * getCINRegion('XX'); // Returns null
+ * ```
  */
-export function formatCIN(cin: string): string | null {
-  const validation = validateCIN(cin);
-  if (!validation.isValid) {
+export function getCINRegion(prefix: string): string | null {
+  const sanitized = prefix.trim().toUpperCase();
+  return REGION_PREFIXES[sanitized as CINRegionPrefix] || null;
+}
+
+/**
+ * Extracts region and sequence information from a valid CIN
+ *
+ * @param cin - The CIN string to analyze
+ * @returns Object containing region and sequence information, or null if CIN is invalid
+ *
+ * @example
+ * ```typescript
+ * extractCINMetadata('A123456');
+ * // Returns {
+ * //   region: 'Rabat',
+ * //   sequence: '123456'
+ * // }
+ *
+ * extractCINMetadata('invalid'); // Returns null
+ * ```
+ */
+export function extractCINMetadata(cin: unknown): CINMetadata | null {
+  const validationResult = validateCIN(cin);
+  if (!validationResult.isValid || !validationResult.metadata) {
     return null;
   }
 
-  return cin.trim().toUpperCase();
+  return {
+    region: validationResult.metadata.region!,
+    sequence: validationResult.metadata.sequence!,
+  };
+}
+
+/**
+ * Formats a CIN string to its standardized format (uppercase, no spaces or special characters)
+ *
+ * @param cin - The CIN string to format
+ * @returns Formatted CIN string or null if input is invalid
+ *
+ * @example
+ * ```typescript
+ * formatCIN('a 123-456'); // Returns 'A123456'
+ * formatCIN('bk.789.012'); // Returns 'BK789012'
+ * formatCIN('invalid'); // Returns null
+ * ```
+ */
+export function formatCIN(cin: unknown): string | null {
+  const sanitized = sanitizeCIN(cin);
+  if (!sanitized) {
+    return null;
+  }
+
+  const validationResult = validateCIN(sanitized);
+  if (!validationResult.isValid) {
+    return null;
+  }
+
+  return sanitized;
+}
+
+/**
+ * Generates a random valid CIN for testing purposes
+ *
+ * @param prefix - Optional specific region prefix to use
+ * @returns A valid CIN string
+ *
+ * @example
+ * ```typescript
+ * generateTestCIN(); // Returns random CIN like 'A123456'
+ * generateTestCIN('BK'); // Returns random CIN starting with 'BK'
+ * ```
+ */
+export function generateTestCIN(prefix?: CINRegionPrefix): string {
+  const randomPrefix =
+    prefix ||
+    Object.keys(REGION_PREFIXES)[
+      Math.floor(Math.random() * Object.keys(REGION_PREFIXES).length)
+    ];
+  const sequence = String(Math.floor(Math.random() * 899999) + 100000);
+  return `${randomPrefix}${sequence}`;
 }
