@@ -1,5 +1,3 @@
-// src/validators/cin.ts
-
 export interface CINValidationResult {
   isValid: boolean;
   errors: string[];
@@ -56,6 +54,34 @@ const REGION_PREFIXES: { [key: string]: string } = {
  * Validates a Moroccan CIN (Carte d'Identité Nationale) number
  * @param cin - The CIN number to validate
  * @returns CINValidationResult object containing validation status and details
+ */
+/**
+ * Validates a CIN (Citizen Identification Number) based on specific patterns and rules.
+ *
+ * @param cin - The CIN string to validate.
+ * @returns An object containing the validation result, including whether the CIN is valid,
+ *          any errors encountered during validation, and metadata if the CIN is valid.
+ *
+ * The validation process includes:
+ * - Checking if the CIN is empty or not a string.
+ * - Normalizing the input by trimming and converting to uppercase.
+ * - Checking if the CIN matches either of the allowed patterns:
+ *   - One letter followed by 6 digits (e.g., A123456)
+ *   - Valid two-letter combination (BE, BH, BJ, BK, CD, EE) followed by 5 digits
+ * - Extracting and validating the region prefix.
+ * - Extracting and validating the sequence number.
+ *
+ * If the CIN is valid, the result will include metadata with the region and sequence number.
+ *
+ * @example
+ * ```typescript
+ * const result = validateCIN('A123456');
+ * if (result.isValid) {
+ *   console.log('Valid CIN:', result.metadata);
+ * } else {
+ *   console.error('Invalid CIN:', result.errors);
+ * }
+ * ```
  */
 export function validateCIN(cin: string): CINValidationResult {
   const result: CINValidationResult = {

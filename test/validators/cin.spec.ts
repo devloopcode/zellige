@@ -1,5 +1,3 @@
-// test/validators/cin.spec.ts
-
 import { validateCIN, extractCINMetadata, formatCIN } from '../../src';
 
 describe('CIN Validator', () => {
