@@ -9,7 +9,6 @@
 import {
   validateCIN,
   extractCINMetadata,
-  formatCIN,
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
@@ -19,10 +18,9 @@ import {
 /**
  * Namespace containing all CIN-related validation functions
  */
-export const cin = {
+const cin = {
   validate: validateCIN,
   extractMetadata: extractCINMetadata,
-  format: formatCIN,
   generateTest: generateTestCIN,
   getRegion: getCINRegion,
   sanitize: sanitizeCIN,
@@ -48,14 +46,8 @@ export default validators;
 export {
   validateCIN,
   extractCINMetadata,
-  formatCIN,
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
   isValidCIN,
 };
-
-/**
- * Type exports for CIN validation
- */
-export type { CINValidationResult } from './cin';

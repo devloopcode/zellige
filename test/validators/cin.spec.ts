@@ -1,7 +1,6 @@
 import {
   validateCIN,
   extractCINMetadata,
-  formatCIN,
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
@@ -106,18 +105,6 @@ describe('CIN Validator', () => {
     });
   });
 
-  describe('formatCIN', () => {
-    test('should format valid CIN correctly', () => {
-      expect(formatCIN('be123456')).toBe('BE123456');
-      expect(formatCIN(' A123456 ')).toBe('A123456');
-      expect(formatCIN('ag123456')).toBe('AG123456');
-    });
-
-    test('should return null for invalid CIN', () => {
-      expect(formatCIN('invalid')).toBeNull();
-    });
-  });
-
   describe('generateTestCIN', () => {
     test('should generate valid CIN with specified prefix', () => {
       const cin = generateTestCIN('BE');
@@ -168,16 +155,6 @@ describe('CIN Validator', () => {
       expect(extractCINMetadata(undefined)).toBeNull();
       expect(extractCINMetadata(123)).toBeNull();
       expect(extractCINMetadata('invalid')).toBeNull();
-    });
-  });
-
-  describe('CIN formatting', () => {
-    test('should handle invalid inputs for formatting', () => {
-      expect(formatCIN(null)).toBeNull();
-      expect(formatCIN(undefined)).toBeNull();
-      expect(formatCIN(123)).toBeNull();
-      expect(formatCIN('invalid')).toBeNull();
-      expect(formatCIN('XX123456')).toBeNull();
     });
   });
 
