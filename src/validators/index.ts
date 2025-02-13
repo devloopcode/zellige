@@ -1,5 +1,5 @@
 /**
- * Validator module for CIN (Carte d'Identité Nationale) operations
+ * Validator module for various data validation operations
  * @module validators
  */
 
@@ -8,7 +8,6 @@
  */
 import {
   validateCIN,
-  extractCINMetadata,
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
@@ -20,7 +19,6 @@ import {
  */
 const cin = {
   validate: validateCIN,
-  extractMetadata: extractCINMetadata,
   generateTest: generateTestCIN,
   getRegion: getCINRegion,
   sanitize: sanitizeCIN,
@@ -43,11 +41,4 @@ export default validators;
 /**
  * Direct exports of CIN validation functions for granular imports
  */
-export {
-  validateCIN,
-  extractCINMetadata,
-  generateTestCIN,
-  getCINRegion,
-  sanitizeCIN,
-  isValidCIN,
-};
+export { validateCIN, generateTestCIN, getCINRegion, sanitizeCIN, isValidCIN };

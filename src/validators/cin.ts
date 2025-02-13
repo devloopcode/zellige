@@ -1,5 +1,5 @@
 import { REGION_PREFIXES, CINRegionPrefix } from '../constants/regions';
-import { CINErrorCode, CINValidationResult, CINMetadata } from '../types/cin';
+import { CINErrorCode, CINValidationResult } from '../types/cin';
 
 /**
  * Regular expression for Moroccan CIN validation
@@ -157,35 +157,6 @@ export function isValidCIN(cin: unknown): boolean {
 export function getCINRegion(prefix: string): string | null {
   const sanitized = prefix.trim().toUpperCase();
   return REGION_PREFIXES[sanitized as CINRegionPrefix] || null;
-}
-
-/**
- * Extracts region and sequence information from a valid CIN
- *
- * @param cin - The CIN string to analyze
- * @returns Object containing region and sequence information, or null if CIN is invalid
- *
- * @example
- * ```typescript
- * extractCINMetadata('A123456');
- * // Returns {
- * //   region: 'Rabat',
- * //   sequence: '123456'
- * // }
- *
- * extractCINMetadata('invalid'); // Returns null
- * ```
- */
-export function extractCINMetadata(cin: unknown): CINMetadata | null {
-  const validationResult = validateCIN(cin);
-  if (!validationResult.isValid || !validationResult.metadata) {
-    return null;
-  }
-
-  return {
-    region: validationResult.metadata.region!,
-    sequence: validationResult.metadata.sequence!,
-  };
 }
 
 /**

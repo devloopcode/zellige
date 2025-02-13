@@ -1,6 +1,5 @@
 import {
   validateCIN,
-  extractCINMetadata,
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
@@ -64,47 +63,6 @@ describe('CIN Validator', () => {
     });
   });
 
-  describe('extractCINMetadata', () => {
-    test('should extract correct region information', () => {
-      const testCases = [
-        {
-          cin: 'BE123456',
-          expected: { region: 'Casablanca', sequence: '123456' },
-        },
-        {
-          cin: 'A123456',
-          expected: { region: 'Rabat', sequence: '123456' },
-        },
-        {
-          cin: 'EE123456',
-          expected: { region: 'Marrakech', sequence: '123456' },
-        },
-        {
-          cin: 'BX123456',
-          expected: { region: 'MRE', sequence: '123456' },
-        },
-        {
-          cin: 'UA123456',
-          expected: { region: 'Goulmima', sequence: '123456' },
-        },
-        {
-          cin: 'AG123456',
-          expected: { region: 'Rabat', sequence: '123456' },
-        },
-      ];
-
-      testCases.forEach(({ cin, expected }) => {
-        const metadata = extractCINMetadata(cin);
-        expect(metadata).toEqual(expected);
-      });
-    });
-
-    test('should return null for invalid CIN', () => {
-      const metadata = extractCINMetadata('invalid');
-      expect(metadata).toBeNull();
-    });
-  });
-
   describe('generateTestCIN', () => {
     test('should generate valid CIN with specified prefix', () => {
       const cin = generateTestCIN('BE');
@@ -146,15 +104,6 @@ describe('CIN Validator', () => {
       expect(sanitizeCIN(123)).toBeNull();
       expect(sanitizeCIN('BE-123.456')).toBe('BE123456');
       expect(sanitizeCIN('be@123#456')).toBe('BE123456');
-    });
-  });
-
-  describe('metadata extraction', () => {
-    test('should handle invalid inputs for metadata extraction', () => {
-      expect(extractCINMetadata(null)).toBeNull();
-      expect(extractCINMetadata(undefined)).toBeNull();
-      expect(extractCINMetadata(123)).toBeNull();
-      expect(extractCINMetadata('invalid')).toBeNull();
     });
   });
 

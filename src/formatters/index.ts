@@ -1,5 +1,5 @@
 /**
- * Formatter module for CIN (Carte d'Identité Nationale) operations
+ * Formatter module for various data formatting operations
  * @module formatters
  */
 
