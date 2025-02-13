@@ -5,6 +5,7 @@ import {
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
+  isValidCIN,
 } from '../../src';
 
 describe('CIN Validator', () => {
@@ -41,6 +42,8 @@ describe('CIN Validator', () => {
         'A123456A', // digits must be at end
         'BE012345', // sequence starting with 0
         'XX123456', // invalid letter combination
+        '##123456', // invalid characters
+        -1, // invalid type
       ];
 
       invalidCINs.forEach(cin => {
@@ -175,6 +178,40 @@ describe('CIN Validator', () => {
       expect(formatCIN(123)).toBeNull();
       expect(formatCIN('invalid')).toBeNull();
       expect(formatCIN('XX123456')).toBeNull();
+    });
+  });
+
+  describe('isValidCIN', () => {
+    test('should return true for valid CIN', () => {
+      expect(isValidCIN('A123456')).toBe(true);
+      expect(isValidCIN('BE123456')).toBe(true);
+      expect(isValidCIN('AG123456')).toBe(true);
+    });
+
+    test('should return false for invalid CIN', () => {
+      expect(isValidCIN('')).toBe(false);
+      expect(isValidCIN('ABCD123456')).toBe(false);
+      expect(isValidCIN('123456')).toBe(false);
+      expect(isValidCIN('A12345')).toBe(false);
+      expect(isValidCIN('BE1234567')).toBe(false);
+      expect(isValidCIN('YY123456')).toBe(false);
+      expect(isValidCIN('A123456A')).toBe(false);
+      expect(isValidCIN('BE012345')).toBe(false);
+      expect(isValidCIN('XX123456')).toBe(false);
+    });
+
+    test('should handle non-string inputs', () => {
+      expect(isValidCIN(null)).toBe(false);
+      expect(isValidCIN(undefined)).toBe(false);
+      expect(isValidCIN(123)).toBe(false);
+      expect(isValidCIN({})).toBe(false);
+      expect(isValidCIN([])).toBe(false);
+    });
+
+    test('should handle whitespace and case sensitivity', () => {
+      expect(isValidCIN(' a123456 ')).toBe(true);
+      expect(isValidCIN('BE123456')).toBe(true);
+      expect(isValidCIN('be123456')).toBe(true);
     });
   });
 });

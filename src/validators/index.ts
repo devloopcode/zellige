@@ -13,6 +13,7 @@ import {
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
+  isValidCIN,
 } from './cin';
 
 /**
@@ -25,6 +26,7 @@ export const cin = {
   generateTest: generateTestCIN,
   getRegion: getCINRegion,
   sanitize: sanitizeCIN,
+  isValid: isValidCIN,
 };
 
 /**
@@ -50,6 +52,7 @@ export {
   generateTestCIN,
   getCINRegion,
   sanitizeCIN,
+  isValidCIN,
 };
 
 /**
