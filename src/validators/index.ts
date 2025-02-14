@@ -15,6 +15,19 @@ import {
 } from './cin';
 
 /**
+ * Import passport validation utilities
+ */
+import {
+  validatePassport,
+  isValidPassport,
+  normalizePassport,
+  formatPassport,
+  generateRandomPassport,
+  extractPassportComponents,
+  arePassportsEquivalent,
+} from './passport';
+
+/**
  * Namespace containing all CIN-related validation functions
  */
 const cin = {
@@ -26,10 +39,24 @@ const cin = {
 };
 
 /**
+ * Namespace containing all passport-related validation functions
+ */
+const passport = {
+  validate: validatePassport,
+  isValid: isValidPassport,
+  normalize: normalizePassport,
+  format: formatPassport,
+  generateRandom: generateRandomPassport,
+  extractComponents: extractPassportComponents,
+  areEquivalent: arePassportsEquivalent,
+};
+
+/**
  * Collection of all validator namespaces
  */
 export const validators = {
   cin,
+  passport,
 };
 
 /**
@@ -42,3 +69,16 @@ export default validators;
  * Direct exports of CIN validation functions for granular imports
  */
 export { validateCIN, generateTestCIN, getCINRegion, sanitizeCIN, isValidCIN };
+
+/**
+ * Direct exports of passport validation functions for granular imports
+ */
+export {
+  validatePassport,
+  isValidPassport,
+  normalizePassport,
+  formatPassport,
+  generateRandomPassport,
+  extractPassportComponents,
+  arePassportsEquivalent,
+};
