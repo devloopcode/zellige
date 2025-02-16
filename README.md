@@ -18,10 +18,6 @@
      <a href="https://github.com/aitmiloud/zellige">
       <img alt="GitHub Downloads" src="https://img.shields.io/npm/l/zellige.js" />
     </a>
-    <br />
-    <br />
-  <a href="https://github.com/aitmiloud/zellige/issues/new/choose">Report Bug</a>
-  <a href="https://github.com/aitmiloud/zellige/issues/new/choose">Request Feature</a>
   </p>
 
 [![codecov](https://codecov.io/gh/aitmiloud/zellige/branch/main/graph/badge.svg?token=Q9fr548J0D)](https://codecov.io/gh/aitmiloud/zellige)
