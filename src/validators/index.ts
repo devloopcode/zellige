@@ -28,6 +28,30 @@ import {
 } from './passport';
 
 /**
+ * Import bank validation utilities
+ */
+import {
+  isValidIBAN,
+  isValidRIB,
+  getBankDetails,
+  getSwiftCode,
+  madToWords,
+} from './bank';
+
+/**
+ * Import phone number validation utilities
+ */
+import {
+  validatePhone,
+  formatPhone,
+  getPhoneDetails,
+  extractPhoneNumbers,
+  maskPhone,
+  arePhoneNumbersEqual,
+  sanitizePhone,
+} from './phone-number';
+
+/**
  * Namespace containing all CIN-related validation functions
  */
 const cin = {
@@ -52,11 +76,37 @@ const passport = {
 };
 
 /**
+ * Namespace containing all bank-related validation functions
+ */
+const bank = {
+  isValidIBAN,
+  isValidRIB,
+  getDetails: getBankDetails,
+  getSwiftCode,
+  madToWords,
+};
+
+/**
+ * Namespace containing all phone number-related validation functions
+ */
+const phone = {
+  validate: validatePhone,
+  format: formatPhone,
+  getDetails: getPhoneDetails,
+  extract: extractPhoneNumbers,
+  mask: maskPhone,
+  areEqual: arePhoneNumbersEqual,
+  sanitize: sanitizePhone,
+};
+
+/**
  * Collection of all validator namespaces
  */
 export const validators = {
   cin,
   passport,
+  bank,
+  phone,
 };
 
 /**
@@ -81,4 +131,22 @@ export {
   generateRandomPassport,
   extractPassportComponents,
   arePassportsEquivalent,
+};
+
+/**
+ * Direct exports of bank validation functions for granular imports
+ */
+export { isValidIBAN, isValidRIB, getBankDetails, getSwiftCode, madToWords };
+
+/**
+ * Direct exports of phone number validation functions for granular imports
+ */
+export {
+  validatePhone,
+  formatPhone,
+  getPhoneDetails,
+  extractPhoneNumbers,
+  maskPhone,
+  arePhoneNumbersEqual,
+  sanitizePhone,
 };
