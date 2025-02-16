@@ -1,6 +1,6 @@
 {
   "name": "zellige.js",
-  "version": "0.0.0-development",
+  "version": "0.0.1-development",
   "description": "A Moroccan utility library for working with CIN, phone numbers, currency, addresses, dates, and more.",
   "main": "./lib/index.js",
   "files": [
