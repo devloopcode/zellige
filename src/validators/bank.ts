@@ -1,6 +1,7 @@
 import { MOROCCAN_BANKS } from '../constants/banks';
 import type { BankDetails } from '../types/bank';
 
+// Add error codes enum at the top of the file
 export enum BankValidationError {
   INVALID_INPUT_TYPE = 'BANK_001',
   INVALID_IBAN_FORMAT = 'BANK_002',
@@ -14,6 +15,7 @@ export enum BankValidationError {
   BRANCH_NOT_FOUND = 'BANK_010',
 }
 
+// Custom error class
 export class BankValidationException extends Error {
   constructor(
     public code: BankValidationError,
@@ -25,6 +27,21 @@ export class BankValidationException extends Error {
   }
 }
 
+/**
+ * Validates a given IBAN (International Bank Account Number) for Moroccan banks.
+ *
+ * @param iban - The IBAN string to validate.
+ * @returns `true` if the IBAN is valid, `false` otherwise.
+ * @throws {TypeError} If the provided IBAN is not a string.
+ *
+ * The function performs the following checks:
+ * 1. Ensures the IBAN is a string.
+ * 2. Removes any whitespace and converts the IBAN to uppercase.
+ * 3. Checks if the IBAN matches the Moroccan IBAN format (starts with 'MA' followed by 26 digits).
+ * 4. Extracts the bank code and verifies it against a list of active Moroccan banks.
+ * 5. Rearranges the IBAN and converts it to a numeric string for the MOD 97-10 check.
+ * 6. Performs the MOD 97-10 check to validate the IBAN.
+ */
 export function isValidIBAN(iban: string): boolean {
   try {
     if (typeof iban !== 'string') {
@@ -86,18 +103,29 @@ export function isValidIBAN(iban: string): boolean {
     return true;
   } catch (error) {
     if (error instanceof BankValidationException) {
-      return false;
+      // You can log the error here if needed
+      console.error(`Bank validation error: ${error.code} - ${error.message}`);
     }
     return false;
   }
 }
 
+/**
+ * Validates a Moroccan RIB (Relevé d'Identité Bancaire).
+ *
+ * This function checks if the provided RIB is valid by performing the following steps:
+ * 1. Cleans the RIB by removing spaces and hyphens.
+ * 2. Extracts the bank code and verifies it against a list of active Moroccan banks.
+ * 3. Checks the length and format of the RIB against bank-specific rules.
+ * 4. Calculates the expected key using the MOD 97-10 algorithm and compares it with the actual key.
+ *
+ * @param rib - The RIB string to validate.
+ * @returns `true` if the RIB is valid, `false` otherwise.
+ */
 export function isValidRIB(rib: string): boolean {
   try {
     const cleanRIB = rib.replace(/[\s-]/g, '');
-
     const bankCode = cleanRIB.substring(0, 3);
-
     const bank = MOROCCAN_BANKS.find(b => b.code === bankCode && b.active);
 
     if (!bank) {
@@ -109,19 +137,17 @@ export function isValidRIB(rib: string): boolean {
     }
 
     if (cleanRIB.length !== bank.ribLength) {
-      console.error('❌ Invalid RIB Length:', {
-        expected: bank.ribLength,
-        received: cleanRIB.length,
-      });
       throw new BankValidationException(
         BankValidationError.INVALID_RIB_LENGTH,
         'Invalid RIB length',
-        { expected: bank.ribLength, received: cleanRIB.length }
+        {
+          expected: bank.ribLength,
+          received: cleanRIB.length,
+        }
       );
     }
 
     if (!bank.ribRegex.test(cleanRIB)) {
-      console.error('❌ RIB does not match regex:', bank.ribRegex);
       throw new BankValidationException(
         BankValidationError.INVALID_RIB_FORMAT,
         'RIB does not match bank-specific format',
@@ -142,29 +168,26 @@ export function isValidRIB(rib: string): boolean {
       remainder =
         (remainder * Math.pow(10, chunk.toString().length) + chunk) % 97;
     }
+
     const expectedKey = (97 - remainder) % 97;
 
     if (expectedKey !== actualKey) {
-      console.error('❌ Checksum Mismatch:', {
-        expected: expectedKey,
-        actual: actualKey,
-      });
       throw new BankValidationException(
         BankValidationError.INVALID_RIB_CHECKSUM,
         'Invalid RIB checksum',
-        { expected: expectedKey, actual: actualKey, rib: cleanRIB }
+        {
+          expected: expectedKey,
+          actual: actualKey,
+          rib: cleanRIB,
+        }
       );
     }
 
     return true;
   } catch (error) {
     if (error instanceof BankValidationException) {
-      console.error(
-        `🚨 Bank validation error: ${error.code} - ${error.message}`
-      );
-      return false;
+      console.error(`Bank validation error: ${error.code} - ${error.message}`);
     }
-    console.error('🔥 Unexpected Error:', error);
     return false;
   }
 }
@@ -189,12 +212,15 @@ export function getBankDetails(code: string): BankDetails | undefined {
     return bank;
   } catch (error) {
     if (error instanceof BankValidationException) {
-      return undefined;
+      console.error(`Bank validation error: ${error.code} - ${error.message}`);
     }
     return undefined;
   }
 }
 
+/**
+ * Gets SWIFT/BIC code with branch support
+ */
 export function getSwiftCode(
   code: string,
   branch?: string
@@ -224,71 +250,25 @@ export function getSwiftCode(
     return bank.swift;
   } catch (error) {
     if (error instanceof BankValidationException) {
-      return undefined;
+      console.error(`Bank validation error: ${error.code} - ${error.message}`);
     }
     return undefined;
   }
 }
 
-const units = [
-  '',
-  'un',
-  'deux',
-  'trois',
-  'quatre',
-  'cinq',
-  'six',
-  'sept',
-  'huit',
-  'neuf',
-];
-const teens = [
-  'dix',
-  'onze',
-  'douze',
-  'treize',
-  'quatorze',
-  'quinze',
-  'seize',
-  'dix-sept',
-  'dix-huit',
-  'dix-neuf',
-];
-const tens = [
-  '',
-  'dix',
-  'vingt',
-  'trente',
-  'quarante',
-  'cinquante',
-  'soixante',
-  'soixante-dix',
-  'quatre-vingt',
-  'quatre-vingt-dix',
-];
-
-function convertLessThanThousand(n: number): string {
-  let result = '';
-  if (n >= 100) {
-    result += (n >= 200 ? units[Math.floor(n / 100)] + ' ' : '') + 'cent';
-    n %= 100;
-    if (n > 0) result += ' ';
-  }
-
-  if (n >= 80 && n < 100) {
-    result += 'quatre-vingt' + (n === 80 ? '' : '-' + units[n - 80]);
-  } else if (n >= 20) {
-    result += tens[Math.floor(n / 10)];
-    if (n % 10 > 0) result += '-' + units[n % 10];
-  } else if (n >= 10) {
-    result += teens[n - 10];
-  } else if (n > 0) {
-    result += units[n];
-  }
-
-  return result;
-}
-
+/**
+ * Converts a given amount in Moroccan Dirhams (MAD) to its French words representation.
+ *
+ * @param amount - The amount in Moroccan Dirhams to be converted.
+ * @returns The French words representation of the given amount.
+ *
+ * @example
+ * ```typescript
+ * madToWords(1234); // "mille deux cent trente-quatre dirhams"
+ * madToWords(0); // "zéro dirhams"
+ * madToWords(-45.67); // "moins quarante-cinq dirhams et soixante-sept centimes"
+ * ```
+ */
 export function madToWords(amount: number): string {
   try {
     if (typeof amount !== 'number' || isNaN(amount)) {
@@ -298,6 +278,65 @@ export function madToWords(amount: number): string {
         { providedAmount: amount }
       );
     }
+
+    const units = [
+      '',
+      'un',
+      'deux',
+      'trois',
+      'quatre',
+      'cinq',
+      'six',
+      'sept',
+      'huit',
+      'neuf',
+    ];
+    const teens = [
+      'dix',
+      'onze',
+      'douze',
+      'treize',
+      'quatorze',
+      'quinze',
+      'seize',
+      'dix-sept',
+      'dix-huit',
+      'dix-neuf',
+    ];
+    const tens = [
+      '',
+      'dix',
+      'vingt',
+      'trente',
+      'quarante',
+      'cinquante',
+      'soixante',
+      'soixante-dix',
+      'quatre-vingt',
+      'quatre-vingt-dix',
+    ];
+
+    const convertLessThanThousand = (n: number): string => {
+      let result = '';
+      if (n >= 100) {
+        result += (n >= 200 ? units[Math.floor(n / 100)] + ' ' : '') + 'cent';
+        n %= 100;
+        if (n > 0) result += ' ';
+      }
+
+      if (n >= 80 && n < 100) {
+        result += 'quatre-vingt' + (n === 80 ? '' : '-' + units[n - 80]);
+      } else if (n >= 20) {
+        result += tens[Math.floor(n / 10)];
+        if (n % 10 > 0) result += '-' + units[n % 10];
+      } else if (n >= 10) {
+        result += teens[n - 10];
+      } else if (n > 0) {
+        result += units[n];
+      }
+
+      return result;
+    };
 
     if (amount === 0) return 'zéro dirhams';
     let result = '';
